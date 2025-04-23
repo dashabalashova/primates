@@ -356,8 +356,8 @@ def plot_necklace(ax, df, info_text=None, title=None, colors = None, s_min = Non
     ax.set_ylim(s_min-1000, e_max+1000)
     ax.invert_yaxis()
     ax.set_aspect("equal")
-    ax.set_xlabel("x1 - x2")
-    ax.set_ylabel("y1 - y2")
+    #ax.set_xlabel("x1 - x2")
+    #ax.set_ylabel("y1 - y2")
 
     if info_text: ax.text(
         0.95, 0.95, info_text,
@@ -388,10 +388,34 @@ def plot_segemnts(ax, df, df_reverse_segments = None, title='', x1=None, y1=None
     
     ax.invert_yaxis()
     ax.set_aspect("equal")
-    ax.set_xlabel("x1 - x2")
-    ax.set_ylabel("y1 - y2")
+    #ax.set_xlabel("x1 - x2")
+    #ax.set_ylabel("y1 - y2")
 
-def make_fig(df, df_reflected, df4, df_reverse_regions, res_dir, speciex1, title=None):
+# def make_fig(df, df_reflected, df8, df_reverse_regions, res_dir, species_name, title=None):
+
+#     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    
+#     x_min, x_max = df["x1"].min(), df["x2"].max()
+#     red_squares = [[x_min-1, x_max+1]]
+
+#     df7 = df[(df.x1 >= x_min-100) & (df.x2 <= x_max+100) & (df.y1 >= x_min-100) & (df.y2 <= x_max+100)]
+#     df6 = df8[(df8.x1 >= df7.x1.min()) & (df8.x2 <= df7.x2.max())]
+#     df7_v2 = df_reflected[(df_reflected.x1 >= x_min-100) & (df_reflected.x2 <= x_max+100) & (df_reflected.y1 >= x_min-100) & (df_reflected.y2 <= x_max+100)]
+
+    
+    
+#     info_text = ''
+#     plot_segemnts(axes[0], df7, title = f"Species: {species_name}")
+#     plot_segemnts(axes[1], df7_v2, df_reverse_segments=df_reverse_regions, title='')
+#     colors = plot_necklace(axes[2], df6, info_text=info_text, s_min = df7.x1.min(), e_max = df7.x2.max(), title=f"Clusters: {df8['cluster'].nunique()}")
+        
+#     plt.tight_layout()
+#     #plt.savefig(res_dir+speciex1+'.png', dpi=300, bbox_inches='tight')
+#     plt.show()
+
+from matplotlib.ticker import ScalarFormatter
+
+def make_fig(df, df_reflected, df8, df_reverse_regions, res_dir, species_name, title=None):
 
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
     
@@ -399,16 +423,19 @@ def make_fig(df, df_reflected, df4, df_reverse_regions, res_dir, speciex1, title
     red_squares = [[x_min-1, x_max+1]]
 
     df7 = df[(df.x1 >= x_min-100) & (df.x2 <= x_max+100) & (df.y1 >= x_min-100) & (df.y2 <= x_max+100)]
-    df6 = df4[(df4.x1 >= df7.x1.min()) & (df4.x2 <= df7.x2.max())]
+    df6 = df8[(df8.x1 >= df7.x1.min()) & (df8.x2 <= df7.x2.max())]
     df7_v2 = df_reflected[(df_reflected.x1 >= x_min-100) & (df_reflected.x2 <= x_max+100) & (df_reflected.y1 >= x_min-100) & (df_reflected.y2 <= x_max+100)]
 
-    
-    
     info_text = ''
-    plot_segemnts(axes[0], df7, title='')
+    plot_segemnts(axes[0], df7, title = f"Species: {species_name}")
     plot_segemnts(axes[1], df7_v2, df_reverse_segments=df_reverse_regions, title='')
-    colors = plot_necklace(axes[2], df6, info_text=info_text, s_min = df7.x1.min(), e_max = df7.x2.max())
-        
+    colors = plot_necklace(axes[2], df6, info_text=info_text, s_min = df7.x1.min(), e_max = df7.x2.max(), title=f"Clusters: {df8['cluster'].nunique()}")
+    
+    # Применим научную нотацию на осях
+    for ax in axes:
+        ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+        ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+        ax.ticklabel_format(style='sci', axis='both', scilimits=(5, 5))  # для значений >= 10^5
+
     plt.tight_layout()
-    #plt.savefig(res_dir+speciex1+'.png', dpi=300, bbox_inches='tight')
     plt.show()

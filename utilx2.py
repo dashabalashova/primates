@@ -37,6 +37,57 @@ def find_split_points_dbscan(df, dbscan_eps):
 # import matplotlib.pyplot as plt
 # import itertools
 
+# class DSeq:
+#     def __init__(self, seq_id, x1, x2, y1, y2):
+#         self.seq_id = seq_id
+#         self.x1 = x1
+#         self.x2 = x2
+#         self.y1 = y1
+#         self.y2 = y2
+
+#     def projection(self, axis):
+#         """Returns the projection of the segment on the specified axis."""
+#         return (self.x1, self.x2) if axis == 'x' else (self.y1, self.y2)
+
+#     def subsegment_in_band(self, axis, band_s, band_e):
+#         """Возвращает подотрезок, лежащий в полосе [band_s, band_e]."""
+#         if axis == 'x':
+#             new_s, new_e, s_fixed, e_fixed = self.x1, self.x2, self.y1, self.y2
+#         else:
+#             new_s, new_e, s_fixed, e_fixed = self.y1, self.y2, self.x1, self.x2
+
+#         new_s = max(new_s, band_s)
+#         new_e = min(new_e, band_e)
+
+#         if new_s >= new_e:
+#             return None  # Нет пересечения
+        
+#         ra = (self.y2 - self.y1) / (self.x2 - self.x1)
+#         new_fixed_s = s_fixed + (new_s - (self.x1 if axis == 'x' else self.y1)) * ra
+#         new_fixed_e = e_fixed - ((self.x2 if axis == 'x' else self.y2) - new_e) * ra
+
+#         return DSeq(self.seq_id, *(int(new_s), int(new_e), int(new_fixed_s), int(new_fixed_e)) if axis == 'x' else (int(new_fixed_s), int(new_fixed_e), int(new_s), int(new_e)))
+
+#     def split_by(self, axis, value):
+#         """Разделяет отрезок по оси axis на два, если точка value внутри отрезка."""
+#         if axis == 'x':
+#             if value <= self.x1 or value >= self.x2:
+#                 return [self]
+#         else:
+#             if value <= self.y1 or value >= self.y2:
+#                 return [self]
+
+#         ra = (self.y2 - self.y1) / (self.x2 - self.x1)
+#         new_fixed = self.y1 + (value - self.x1) * ra if axis == 'x' else self.x1 + (value - self.y1) / ra
+
+#         return [
+#             DSeq(self.seq_id, *(self.x1, value-1, self.y1, int(new_fixed)-1) if axis == 'x' else (self.x1, int(new_fixed)-1, self.y1, value-1)),
+#             DSeq(self.seq_id, *(value, self.x2, int(new_fixed), self.y2) if axis == 'x' else (int(new_fixed), self.x2, value, self.y2))
+#         ]
+
+#     def __repr__(self):
+#         return f"DSeq(seq_id={self.seq_id}, x1={self.x1}, x2={self.x2}, y1={self.y1}, y2={self.y2})"
+
 class DSeq:
     def __init__(self, seq_id, x1, x2, y1, y2):
         self.seq_id = seq_id
@@ -73,17 +124,26 @@ class DSeq:
         if axis == 'x':
             if value <= self.x1 or value >= self.x2:
                 return [self]
-        else:
+        elif self.y1<self.y2:
             if value <= self.y1 or value >= self.y2:
                 return [self]
+        else:
+            if value >= self.y1 or value <= self.y2:
+                return [self]
 
-        ra = (self.y2 - self.y1) / (self.x2 - self.x1)
+        ra = (self.y2 - self.y1) / max(1, (self.x2 - self.x1))
         new_fixed = self.y1 + (value - self.x1) * ra if axis == 'x' else self.x1 + (value - self.y1) / ra
 
-        return [
-            DSeq(self.seq_id, *(self.x1, value-1, self.y1, int(new_fixed)-1) if axis == 'x' else (self.x1, int(new_fixed)-1, self.y1, value-1)),
-            DSeq(self.seq_id, *(value, self.x2, int(new_fixed), self.y2) if axis == 'x' else (int(new_fixed), self.x2, value, self.y2))
-        ]
+        if self.y1<self.y2:
+            return [
+                DSeq(self.seq_id, *(self.x1, value-1, self.y1, int(new_fixed)-1) if axis == 'x' else (self.x1, int(new_fixed)-1, self.y1, value-1)),
+                DSeq(self.seq_id, *(value+1, self.x2, int(new_fixed)+1, self.y2) if axis == 'x' else (int(new_fixed)+1, self.x2, value+1, self.y2))
+            ]
+        else:
+            return [
+                DSeq(self.seq_id, *(self.x1, value-1, self.y1, int(new_fixed)+1) if axis == 'x' else (self.x1, int(new_fixed)-1, self.y1, value+1)),
+                DSeq(self.seq_id, *(value+1, self.x2, int(new_fixed)-1, self.y2) if axis == 'x' else (int(new_fixed)+1, self.x2, value-1, self.y2))
+            ]
 
     def __repr__(self):
         return f"DSeq(seq_id={self.seq_id}, x1={self.x1}, x2={self.x2}, y1={self.y1}, y2={self.y2})"
